@@ -6,7 +6,7 @@ this project is for learing and fun, and still in development
 # TODO:
   -  Move the user controls to `componets` dir
   -  Make more Commints and docstring
-  -  Add Grading section
+  -  Make the hadith list is scrolable
   -  Later...
 
 # Contact Me

@@ -92,7 +92,7 @@ class Hadith(UserControl):
                         horizontal_alignment=CrossAxisAlignment.START
                     ),
 
-                    
+                    self._build_grading()
                 ]
             )
         )
@@ -106,7 +106,8 @@ class Hadith(UserControl):
                         value=self.content,
                         width=320,
                         text_align=TextAlign.JUSTIFY,
-                        size=14
+                        size=14,
+                        selectable=True,
                         #font_family='org'
                     )
                 ],
@@ -115,19 +116,49 @@ class Hadith(UserControl):
         )
         return self._content
 
-    def _build_grading(self):
-        self._graing = Container(
+    def _build_grading(self, show_text:bool = False):
+        if show_text:
+            if self.grading:
+                text = 'سنده صحيح'
+            else:
+                text= 'سنده ضعيف'
+        else:
+            text = None
+
+        self._grading = Container(
             content=Column(
                 controls=[
-                    # TODO: make here graing with icon color text all them changes when the gvalue change
+                    P(
+                        Row(
+                            controls=[
+                                P(
+                                    Icon(
+                                        name=icons.CHECK_CIRCLE_SHARP if self.grading else icons.CANCEL_SHARP,
+                                        color=colors.GREEN_700 if self.grading else colors.RED_ACCENT_200,
+                                    ), padding.only(left=4, top=4, ),
+                                ),
+                                Text(
+                                    value=text,
+                                    color=colors.GREEN_800 if self.grading else colors.RED_ACCENT_200,
+                                    size=12
+                                ) 
+                            ],
+                            alignment=MainAxisAlignment.CENTER,
+                        ),
+                        padding.only(bottom=2),
+                        margin.only(bottom=12) if not show_text else None
+                    )
                 ]
-            )
+            ),
+            alignment=alignment.center,
+            #bgcolor=colors.with_opacity(0.2, colors.WHITE)
         )
-        return self._build_grading()
+        return self._grading
 
     def build(self):
-        title = self._build_title()
+        title   = self._build_title()
         content = self._build_content()
+        grading = self._build_grading(True)
         self._c = Container(
             content=Column(
                 controls=[
@@ -140,6 +171,7 @@ class Hadith(UserControl):
                         width=420,
                         color=colors.LIGHT_BLUE_500,
                     ),
+                    grading
                     
                 ]
             ),
@@ -159,7 +191,13 @@ class App(UserControl):
     
     def build(self):
         self.hadith_list = [
-            Hadith(self.p, "عن الحسين ع", "قال الرسول ص: حسين مني وانا من حسين", True),
+            Hadith(
+                self.p,
+                "عن ولادة رسول الله ص",
+                "الْحُسَيْنُ بْنُ مُحَمَّدٍ الاشْعَرِيُّ عَنْ مُعَلَّى بْنِ مُحَمَّدٍ عَنْ أَبِي الْفَضْلِ عَبْدِ الله بْنِ إِدْرِيسَ عَنْ مُحَمَّدِ بْنِ سِنَانٍ قَالَ كُنْتُ عِنْدَ أَبِي جَعْفَرٍ الثَّانِي (a.s) فَأَجْرَيْتُ اخْتِلافَ الشِّيعَةِ فَقَالَ يَا مُحَمَّدُ إِنَّ الله تَبَارَكَ وَتَعَالَى لَمْ يَزَلْ مُتَفَرِّداً بِوَحْدَانِيَّتِهِ ثُمَّ خَلَقَ مُحَمَّداً وَعَلِيّاً وَفَاطِمَةَ فَمَكَثُوا أَلْفَ دَهْرٍ ثُمَّ خَلَقَ جَمِيعَ الاشْيَاءِ فَأَشْهَدَهُمْ خَلْقَهَا وَأَجْرَى طَاعَتَهُمْ عَلَيْهَا وَفَوَّضَ أُمُورَهَا إِلَيْهِمْ فَهُمْ يُحِلُّونَ مَا يَشَاءُونَ وَيُحَرِّمُونَ مَا يَشَاءُونَ وَلَنْ يَشَاءُوا إِلا أَنْ يَشَاءَ الله تَبَارَكَ وَتَعَالَى ثُمَّ قَالَ يَا مُحَمَّدُ هَذِهِ الدِّيَانَةُ الَّتِي مَنْ تَقَدَّمَهَا مَرَقَ وَمَنْ تَخَلَّفَ عَنْهَا مَحَقَ وَمَنْ لَزِمَهَا لَحِقَ خُذْهَا إِلَيْكَ يَا مُحَمَّدُ.",
+                False
+            )
+            ,
             Hadith(self.p, "كلام غريب",  " قال رسول الله ص: كذات وكذا عن فللن هكذا", True),
             Hadith(self.p, "المنبه", "قال وهب بن منبه: ابي يصحيكم للدوام", False),
         ]
@@ -167,8 +205,11 @@ class App(UserControl):
             content=Column(
                 controls=self.hadith_list,
                 spacing=10,
+                scroll=ScrollMode.AUTO,
+                auto_scroll=False
 
-            )
+            ),
+            
         )
         return P(self._c)
 
