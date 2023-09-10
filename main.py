@@ -2,192 +2,21 @@ from flet import *
 import asyncio
 import sys
 sys.setrecursionlimit(1000000)
-print("Start..")
+print("Started or Reloaded...")
 
 
-class P(UserControl):
-    def __init__(
-          self,
-          content:Control                = None,
-          padding: PaddingValue          = 0   ,
-          margin : int | float | Margin  = 0   ,
-          valigmint: MainAxisAlignment   = None,
-          haligmint: CrossAxisAlignment  = None,
-        ):
-        super().__init__()
-        self.content = content
-        self.padding = padding
-        self.margin  = margin
-        self.v = valigmint
-        self.h = haligmint
+from componets.utils import P
 
-    def build(self):
-        return Container(
-            content=self.content,
-            margin =self.margin ,
-            padding=self.padding,
-        )
+from componets.divider import Diivider
+from componets.hadith import Hadith
 
-class Diivider(UserControl):
-    def __init__(self, height:int|float = 1, width:int|float = 0, color:str=colors.LIGHT_BLUE_700):
-        super().__init__()
-        self.w = width
-        self.h = height
-        self.c = color
-
-    def build(self):
-        return Container(
-            width=self.w,
-            height=self.h,
-            bgcolor=self.c,
-            padding=1
-        )
-
-class Hadith(UserControl):
-    def __init__(
-        self,
-        page: Page,
-        title: str,
-        content: str,
-        grading:bool,
-    ):
-        super().__init__()
-        self.p = page
-        self.title = title
-        self.content = content
-        self.grading = grading
-    
-    def _build_title(self):
-        self._title = Container(
-            content=Row(
-                controls=[
-                    Column(
-                        controls=[
-                            Row(
-                                controls=[
-                                    Container(
-                                        width=4,
-                                        height=27,
-                                        bgcolor=colors.LIGHT_BLUE_700,
-                                        padding=5
-                                    ),
-                                    Text(
-                                        value=f'{self.title}',
-                                        size=17,
-                                        color=colors.LIGHT_BLUE_700
-                                    ),
-                                ]
-                            ),
-                            P( 
-                                Diivider(
-                                    height=0.8,
-                                    width=240,
-                                    color=colors.LIGHT_BLUE_700,
-                                ),
-                                2,
-                                1
-                            )
-                        ],
-                        alignment=MainAxisAlignment.CENTER,
-                        horizontal_alignment=CrossAxisAlignment.START
-                    ),
-
-                    self._build_grading()
-                ]
-            )
-        )
-        return self._title
-
-    def _build_content(self):
-        self._content = Container(
-            content=Column(
-                controls=[
-                    Text(
-                        value=self.content,
-                        width=320,
-                        text_align=TextAlign.JUSTIFY,
-                        size=14,
-                        selectable=True,
-                        #font_family='org'
-                    )
-                ],
-
-            )
-        )
-        return self._content
-
-    def _build_grading(self, show_text:bool = False):
-        if show_text:
-            if self.grading:
-                text = 'سنده صحيح'
-            else:
-                text= 'سنده ضعيف'
-        else:
-            text = None
-
-        self._grading = Container(
-            content=Column(
-                controls=[
-                    P(
-                        Row(
-                            controls=[
-                                P(
-                                    Icon(
-                                        name=icons.CHECK_CIRCLE_SHARP if self.grading else icons.CANCEL_SHARP,
-                                        color=colors.GREEN_700 if self.grading else colors.RED_ACCENT_200,
-                                    ), padding.only(left=4, top=4, ),
-                                ),
-                                Text(
-                                    value=text,
-                                    color=colors.GREEN_800 if self.grading else colors.RED_ACCENT_200,
-                                    size=12
-                                ) 
-                            ],
-                            alignment=MainAxisAlignment.CENTER,
-                        ),
-                        padding.only(bottom=2),
-                        margin.only(bottom=12) if not show_text else None
-                    )
-                ]
-            ),
-            alignment=alignment.center,
-            #bgcolor=colors.with_opacity(0.2, colors.WHITE)
-        )
-        return self._grading
-
-    def build(self):
-        title   = self._build_title()
-        content = self._build_content()
-        grading = self._build_grading(True)
-        self._c = Container(
-            content=Column(
-                controls=[
-                    title,
-                    P(margin=margin.only(bottom=5)),
-                    content,
-                    P(margin=margin.only(bottom=5, top=1)),
-                    Diivider(
-                        height=0.7,
-                        width=420,
-                        color=colors.LIGHT_BLUE_500,
-                    ),
-                    grading
-                    
-                ]
-            ),
-            bgcolor=colors.with_opacity(0.1, colors.WHITE10),
-            border=border.all(1, colors.GREY_800,),
-            border_radius=10,
-            padding=15,
-            margin=margin.only(right=5, left=5, top=2)
-
-        )
-        return self._c
+from pages.home import Home
+from pages.book import Book
 
 class App(UserControl):
     def __init__(self, page: Page):
         super().__init__()
-        self.p = page
+        self.p = page 
     
     def build(self):
         self.hadith_list = [
@@ -209,7 +38,7 @@ class App(UserControl):
                 auto_scroll=False
 
             ),
-            
+
         )
         return P(self._c)
 
@@ -222,10 +51,56 @@ async def main(p: Page):
         font_family='Iran Sans'
     )
 
-    app = App(p)
-    await p.add_async(
-        P(app, 10,8)
+    p.scroll=ScrollMode.ALWAYS
+
+    views = {
+        'home': Home,
+        'book': Book,
+    }
+
+    home_data = {
+        'books':[
+            {
+                'title':'Al-Kafi',
+                'subtext':'hadith book',
+                'cover':'images/Al-Kafi.jpg',
+                'hadith':[
+                    ['1ـ أَخْبَرَنَا مُحَمَّدُ بْنُ يَعْقُوبَ عَنْ عَلِيِّ بْنِ إِبْرَاهِيمَ بْنِ هَاشِمٍ عَنْ أَبِيهِ عَنِ الْحَسَنِ بْنِ أَبِي الْحُسَيْنِ الْفَارِسِيِّ عَنْ عَبْدِ الرَّحْمَنِ بْنِ زَيْدٍ عَنْ أَبِيهِ عَنْ أَبِي عَبْدِ الله (a.s) قَالَ قَالَ رَسُولُ الله ﷺ طَلَبُ الْعِلْمِ فَرِيضَةٌ عَلَى كُلِّ مُسْلِمٍ أَلا إِنَّ الله يُحِبُّ بُغَاةَ الْعِلْمِ.', False],
+                    ['2ـ مُحَمَّدُ بْنُ يَحْيَى عَنْ مُحَمَّدِ بْنِ الْحُسَيْنِ عَنْ مُحَمَّدِ بْنِ عَبْدِ الله عَنْ عِيسَى بْنِ عَبْدِ الله الْعُمَرِيِّ عَنْ أَبِي عَبْدِ الله (a.s) قَالَ طَلَبُ الْعِلْمِ فَرِيضَةٌ.', False],
+                    ['3ـ عَلِيُّ بْنُ إِبْرَاهِيمَ عَنْ مُحَمَّدِ بْنِ عِيسَى عَنْ يُونُسَ بْنِ عَبْدِ الرَّحْمَنِ عَنْ بَعْضِ أَصْحَابِهِ قَالَ سُئِلَ أَبُو الْحَسَنِ (a.s) هَلْ يَسَعُ النَّاسَ تَرْكُ الْمَسْأَلَةِ عَمَّا يَحْتَاجُونَ إِلَيْهِ فَقَالَ لا.', False],
+                    ['4ـ عَلِيُّ بْنُ مُحَمَّدٍ وَغَيْرُهُ عَنْ سَهْلِ بْنِ زِيَادٍ وَمُحَمَّدُ بْنُ يَحْيَى عَنْ أَحْمَدَ بْنِ مُحَمَّدِ بْنِ عِيسَى جَمِيعاً عَنِ ابْنِ مَحْبُوبٍ عَنْ هِشَامِ بْنِ سَالِمٍ عَنْ أَبِي حَمْزَةَ عَنْ أَبِي إِسْحَاقَ السَّبِيعِيِّ عَمَّنْ حَدَّثَهُ قَالَ سَمِعْتُ أَمِيرَ الْمُؤْمِنِينَ يَقُولُ أَيُّهَا النَّاسُ اعْلَمُوا أَنَّ كَمَالَ الدِّينِ طَلَبُ الْعِلْمِ وَالْعَمَلُ بِهِ أَلا وَإِنَّ طَلَبَ الْعِلْمِ أَوْجَبُ عَلَيْكُمْ مِنْ طَلَبِ الْمَالِ إِنَّ الْمَالَ مَقْسُومٌ مَضْمُونٌ لَكُمْ قَدْ قَسَمَهُ عَادِلٌ بَيْنَكُمْ وَضَمِنَهُ وَسَيَفِي لَكُمْ وَالْعِلْمُ مَخْزُونٌ عِنْدَ أَهْلِهِ وَقَدْ أُمِرْتُمْ بِطَلَبِهِ مِنْ أَهْلِهِ فَاطْلُبُوهُ.', False],
+                    ['5ـ عِدَّةٌ مِنْ أَصْحَابِنَا عَنْ أَحْمَدَ بْنِ مُحَمَّدٍ الْبَرْقِيِّ عَنْ يَعْقُوبَ بْنِ يَزِيدَ عَنْ أَبِي عَبْدِ الله رَجُلٍ مِنْ أَصْحَابِنَا رَفَعَهُ قَالَ قَالَ أَبُو عَبْدِ الله (a.s) قَالَ رَسُولُ الله ﷺ طَلَبُ الْعِلْمِ فَرِيضَةٌ وَفِي حَدِيثٍ آخَرَ قَالَ قَالَ أَبُو عَبْدِ الله (a.s) قَالَ رَسُولُ الله ﷺ طَلَبُ الْعِلْمِ فَرِيضَةٌ عَلَى كُلِّ مُسْلِمٍ أَلا وَإِنَّ الله يُحِبُّ بُغَاةَ الْعِلْمِ.', False],
+                    ['6ـ عَلِيُّ بْنُ مُحَمَّدِ بْنِ عَبْدِ الله عَنْ أَحْمَدَ بْنِ مُحَمَّدِ بْنِ خَالِدٍ عَنْ عُثْمَانَ بْنِ عِيسَى عَنْ عَلِيِّ بْنِ أَبِي حَمْزَةَ قَالَ سَمِعْتُ أَبَا عَبْدِ الله (a.s) يَقُولُ تَفَقَّهُوا فِي الدِّينِ فَإِنَّهُ مَنْ لَمْ يَتَفَقَّهْ مِنْكُمْ فِي الدِّينِ فَهُوَ أَعْرَابِيٌّ إِنَّ الله يَقُولُ فِي كِتَابِهِ لِيَتَفَقَّهُوا فِي الدِّينِ وَلِيُنْذِرُوا قَوْمَهُمْ إِذا رَجَعُوا إِلَيْهِمْ لَعَلَّهُمْ يَحْذَرُونَ.', False],
+                    ['7ـ الْحُسَيْنُ بْنُ مُحَمَّدٍ عَنْ جَعْفَرِ بْنِ مُحَمَّدٍ عَنِ الْقَاسِمِ بْنِ الرَّبِيعِ عَنْ مُفَضَّلِ بْنِ عُمَرَ قَالَ سَمِعْتُ أَبَا عَبْدِ الله (a.s) يَقُولُ عَلَيْكُمْ بِالتَّفَقُّهِ فِي دِينِ الله وَلا تَكُونُوا أَعْرَاباً فَإِنَّهُ مَنْ لَمْ يَتَفَقَّهْ فِي دِينِ الله لَمْ يَنْظُرِ الله إِلَيْهِ يَوْمَ الْقِيَامَةِ وَلَمْ يُزَكِّ لَهُ عَمَلاً.', False],
+                    ['8ـ مُحَمَّدُ بْنُ إِسْمَاعِيلَ عَنِ الْفَضْلِ بْنِ شَاذَانَ عَنِ ابْنِ أَبِي عُمَيْرٍ عَنْ جَمِيلِ بْنِ دَرَّاجٍ عَنْ أَبَانِ بْنِ تَغْلِبَ عَنْ أَبِي عَبْدِ الله (a.s) قَالَ لَوَدِدْتُ أَنَّ أَصْحَابِي ضُرِبَتْ رُءُوسُهُمْ بِالسِّيَاطِ حَتَّى يَتَفَقَّهُوا.',True],
+                    ['9ـ عَلِيُّ بْنُ مُحَمَّدٍ عَنْ سَهْلِ بْنِ زِيَادٍ عَنْ مُحَمَّدِ بْنِ عِيسَى عَمَّنْ رَوَاهُ عَنْ أَبِي عَبْدِ الله (a.s) قَالَ قَالَ لَهُ رَجُلٌ جُعِلْتُ فِدَاكَ رَجُلٌ عَرَفَ هَذَا الامْرَ لَزِمَ بَيْتَهُ وَلَمْ يَتَعَرَّفْ إِلَى أَحَدٍ مِنْ إِخْوَانِهِ قَالَ فَقَالَ كَيْفَ يَتَفَقَّهُ هَذَا فِي دِينِهِ.', False],
+                ]
+            }
+        ]
+    }
+
+    Home_view = views.get('home')(p, home_data)
+    p.views[0] = (
+        View(
+            '/',
+            controls=[
+                Home_view,
+            ],
+            appbar=Home_view._build_app_bar(),
+            scroll=ScrollMode.ALWAYS,
+        )
     )
+
+    async def view_pop(view):
+        print(view)
+        p.views.pop()
+        top_view = p.views[-1]
+        await p.update_async()
+        print('view changed')
+
+    p.on_view_pop = view_pop
+    await p.update_async()
+
 
 if __name__=='__main__':
     loop = asyncio.new_event_loop()
@@ -237,4 +112,3 @@ if __name__=='__main__':
             assets_dir='assets'
         )
     )
-
